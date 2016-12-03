@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <assert.h>
+#include <stdbool.h>
 #include "sysstatd.h"
 
 static void print_usage(){
@@ -13,10 +14,11 @@ static void print_usage(){
 
 char * fpath = NULL;
 int port = -1;
+bool logging = true;
 
 int main(int argc, char **argv){
 	int opt;
-	while((opt = getopt(argc, argv, "p:R:")) > 0){
+	while((opt = getopt(argc, argv, "p:R:s")) > 0){
 		switch(opt){
 			case 'p':
 				if(sscanf(optarg, "%d", &port) != 1 || port < 0){
@@ -30,10 +32,13 @@ int main(int argc, char **argv){
 				assert(fpath);
 				strcpy(fpath, optarg);
 				break;
+			case 's':
+				logging = false;
+				break;
 			default:
 				fprintf(stderr, "Unknown option: %c\n", opt);
 				print_usage();
-				return 2;
+				return 1;
 		}
 	}
 	if(port == -1){
