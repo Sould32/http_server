@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "sysstatd.h"
 #include "system_info.h"
+#include "artificial_loading.h"
 
 static void print_usage(){
 	fprintf(stderr, "Usage: sysstatd -p [PORT NUMBER] -R [STATIC PATH]\n");
@@ -56,4 +57,14 @@ int main(int argc, char **argv){
 	printf("\n");
 	loadavg(stdout);
 	printf("\n");
+	for(int i = 0; i < 7; ++i){
+		allocanon(stdout);
+		printf("\n");
+	}
+	meminfo(stdout);
+	printf("\n");
+	for(int i = 0; i < 7; ++i){
+		freeanon(stdout);
+		printf("\n");
+	}
 }
