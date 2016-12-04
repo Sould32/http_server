@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "sysstatd.h"
+#include "system_info.h"
 
 static void print_usage(){
 	fprintf(stderr, "Usage: sysstatd -p [PORT NUMBER] -R [STATIC PATH]\n");
@@ -51,4 +52,8 @@ int main(int argc, char **argv){
 		print_usage();
 		return 1;
 	}
+	meminfo(stdout);
+	printf("\n");
+	loadavg(stdout);
+	printf("\n");
 }
