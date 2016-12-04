@@ -1,9 +1,31 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <sys/mman.h>
+#include <time.h>
+
+static void * runloop_proc(void * data){
+	struct timespec start;
+	struct timespec end;
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	while(1){
+		clock_gettime(CLOCK_MONOTONIC, &end);
+		if(end.tv_sec - start.tv_sec >= 15){
+			break;
+		}
+	}
+	return NULL;
+}
 
 void runloop(FILE * fd){
-	//Spawn off thread
+	//Spawn off thread. Make it detached so we don't need to clean up.
+	pthread_t thread;
+	pthread_attr_t thread_attr;
+	pthread_attr_init(&thread_attr);
+	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_JOINABLE);
+	if(pthread_create(&thread, &thread_attr, &runloop_proc, NULL)){
+		//Unable to create thread
+	}
+	pthread_attr_destroy(&thread_attr);
 	fprintf(fd, "Started 15 second spin");
 }
 

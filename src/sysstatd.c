@@ -67,4 +67,8 @@ int main(int argc, char **argv){
 		freeanon(stdout);
 		printf("\n");
 	}
+	runloop(stdout);
+	sleep(5);
+	loadavg(stdout);
+	printf("\n");
 }
