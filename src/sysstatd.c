@@ -7,6 +7,7 @@
 #include "sysstatd.h"
 #include "system_info.h"
 #include "artificial_loading.h"
+#include "sockets.h"
 
 static void print_usage(){
 	fprintf(stderr, "Usage: sysstatd -p [PORT NUMBER] -R [STATIC PATH]\n");
@@ -16,7 +17,7 @@ static void print_usage(){
 }
 
 char * fpath = NULL;
-int port = -1;
+char * port = NULL;
 bool logging = true;
 
 int main(int argc, char **argv){
@@ -24,16 +25,10 @@ int main(int argc, char **argv){
 	while((opt = getopt(argc, argv, "p:R:s")) > 0){
 		switch(opt){
 			case 'p':
-				if(sscanf(optarg, "%d", &port) != 1 || port < 0){
-					fprintf(stderr, "Invalid port number specified\n");
-				}
+				port = optarg;
 				break;
 			case 'R':
-				//Warning: Unbounded strcpy use! Safe due to dynamic allocation
-				//         of sufficient memory.
-				fpath = malloc(strlen(optarg) + 1);
-				assert(fpath);
-				strcpy(fpath, optarg);
+				fpath = optarg;
 				break;
 			case 's':
 				logging = false;
@@ -44,7 +39,7 @@ int main(int argc, char **argv){
 				return 1;
 		}
 	}
-	if(port == -1){
+	if(port == NULL){
 		fprintf(stderr, "Port number not specified\n");
 		print_usage();
 		return 1;
@@ -54,23 +49,11 @@ int main(int argc, char **argv){
 		print_usage();
 		return 1;
 	}
-	meminfo(stdout);
-	printf("\n");
-	loadavg(stdout);
-	printf("\n");
-	for(int i = 0; i < 7; ++i){
-		allocanon(stdout);
-		printf("\n");
+	if(logging) printf("Port: %s Directory: %s\n", port, fpath);
+	int listenfd = get_listen_fd(port);
+	if(listenfd < 0){
+		fprintf(stderr, "Unable to open socket\n");
+		return 1;
 	}
-	meminfo(stdout);
-	printf("\n");
-	for(int i = 0; i < 7; ++i){
-		freeanon(stdout);
-		printf("\n");
-	}
-	runloop(stdout);
-	sleep(5);
-	loadavg(stdout);
-	printf("\n");
-	find_file(fpath, "index.html");
+	close(listenfd);
 }
