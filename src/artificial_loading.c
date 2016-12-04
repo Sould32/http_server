@@ -46,6 +46,7 @@ void runloop(FILE * fd){
 	fprintf(fd, "Started 15 second spin");
 }
 
+static pthread_mutex_t block_lock = PTHREAD_MUTEX_INITIALIZER;
 static int block_count = 0;
 static void* first_block = NULL;
 
@@ -56,7 +57,9 @@ static void* first_block = NULL;
  * Maximum of six blocks can be allocated.
  */
 void allocanon(FILE * fd){
+	pthread_mutex_lock(&block_lock);
 	if(block_count == 6){
+		pthread_mutex_unlock(&block_lock);
 		fprintf(fd, "Reached maximum of 6 blocks, request ignored");
 		//Still returns OK
 		return;
@@ -72,6 +75,7 @@ void allocanon(FILE * fd){
 	else{
 		//Internal server error
 	}
+	pthread_mutex_unlock(&block_lock);
 }
 
 /*
@@ -82,6 +86,7 @@ void allocanon(FILE * fd){
  * hardware-related happens.
  */
 void freeanon(FILE * fd){
+	pthread_mutex_lock(&block_lock);
 	if(block_count){
 		block_count--;
 		void* oldblock = first_block;
@@ -95,4 +100,5 @@ void freeanon(FILE * fd){
 	else{
 		fprintf(fd, "No blocks allocated.");
 	}
+	pthread_mutex_unlock(&block_lock);
 }
