@@ -55,4 +55,5 @@
 #define HTTP_GATEWAY_TIMED_OUT "504 Gateway Time-out"
 #define HTTP_VERSION_NOT_SUPPORTED "505 HTTP Version not supported"
 
+void response(int fd, char *msg, char *content, size_t content_len);
 
