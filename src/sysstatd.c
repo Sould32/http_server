@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdbool.h>
+#include "serve_static.h"
 #include "sysstatd.h"
 #include "system_info.h"
 #include "artificial_loading.h"
@@ -71,4 +72,5 @@ int main(int argc, char **argv){
 	sleep(5);
 	loadavg(stdout);
 	printf("\n");
+	find_file(fpath, "index.html");
 }
