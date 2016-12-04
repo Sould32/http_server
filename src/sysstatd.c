@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdbool.h>
+#include "serve_static.h"
 #include "sysstatd.h"
 
 static void print_usage(){
@@ -51,4 +52,5 @@ int main(int argc, char **argv){
 		print_usage();
 		return 1;
 	}
+	find_file(fpath, "index.html");
 }
