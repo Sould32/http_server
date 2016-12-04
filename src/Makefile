@@ -1,6 +1,6 @@
 
 CC = gcc
-CFLAGS = -Wall -O3 -Werror -m32 -pthread -std=gnu11
+CFLAGS = -Wall -O3 -Werror -m64 -pthread -std=gnu11
 OBJS = sysstatd.o system_info.o artificial_loading.o
 
 all: sysstatd
