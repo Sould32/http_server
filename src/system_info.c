@@ -1,7 +1,17 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include "system_info.h"
 
+/*
+ * TODO: Replace fprintf with methods to write to socket
+ * TODO: Get message length for inclusion with HTTP header
+ * TODO: Write HTTP headers too.
+ */
+
+/*
+ * Send a JSON response with load average information
+ */
 void loadavg(FILE* fd){
 	FILE * loadfile = fopen("/proc/loadavg", "r");
 	if(loadfile == NULL){
@@ -15,6 +25,7 @@ void loadavg(FILE* fd){
 	}
 	else{
 		//Error reading file
+		fprintf(stderr, "Error reading /proc/loadavg. Unexpected format.\n");
 	}
 	if(fclose(loadfile)){
 		// Failed to close a readonly file?!
@@ -24,6 +35,9 @@ void loadavg(FILE* fd){
 
 }
 
+/*
+ * Send a JSON response with memory usage information
+ */
 void meminfo(FILE* fd){
 	//open /proc/meminfo
 	FILE * memfile = fopen("/proc/meminfo", "r");
