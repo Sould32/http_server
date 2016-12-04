@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <netdb.h>
 #include "serve_static.h"
 #include "sysstatd.h"
 #include "system_info.h"
@@ -54,6 +55,17 @@ int main(int argc, char **argv){
 	if(listenfd < 0){
 		fprintf(stderr, "Unable to open socket\n");
 		return 1;
+	}
+	int connfd;
+	struct sockaddr_storage clientaddr;
+	socklen_t clientaddr_len = sizeof(clientaddr);
+	while(1){
+		connfd = accept(listenfd, (struct sockaddr *) &clientaddr, 
+				&clientaddr_len);
+		//Handle connection
+		if(connfd > 0){
+			close(connfd);
+		}
 	}
 	close(listenfd);
 }
