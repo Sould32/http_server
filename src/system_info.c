@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "system_info.h"
+#include "http_response.h"
 
 /*
  * TODO: Replace fprintf with methods to write to socket
@@ -12,7 +13,7 @@
 /*
  * Send a JSON response with load average information
  */
-void loadavg(FILE* fd){
+void loadavg(int fd){
 	FILE * loadfile = fopen("/proc/loadavg", "r");
 	if(loadfile == NULL){
 		//return internal server error
@@ -21,11 +22,16 @@ void loadavg(FILE* fd){
 	int running, total;
 	int lastPID;
 	if(fscanf(loadfile, "%f %f %f %d/%d %d", &last1, &last5, &last10, &running, &total, &lastPID) == 6){
-		fprintf(fd, "{\"total_threads\": \"%d\", \"loadavg\": [\"%f\", \"%f\", \"%f\"], \"running_threads\": \"%d\"}", total, last1, last5, last10, running);
+		char buffer[200];
+		snprintf( buffer, 100, "{\"total_threads\": \"%d\", \"loadavg\": [\"%f\", \"%f\", \"%f\"], \"running_threads\": \"%d\"}", total, last1, last5, last10, running);
+		//TODO adjust the length of the file
+		response_head(fd, HTTP_OK, buffer);
+		//fprintf(fd, HTTP_OK, );
 	}
 	else{
 		//Error reading file
-		fprintf(stderr, "Error reading /proc/loadavg. Unexpected format.\n");
+		response_head(fd, HTTP_EXPECTATION_FAILED, "Error reading /proc/loadavg. Unexpected format.\n");
+		//fprintf(stderr, "Error reading /proc/loadavg. Unexpected format.\n");
 	}
 	if(fclose(loadfile)){
 		// Failed to close a readonly file?!
@@ -34,16 +40,18 @@ void loadavg(FILE* fd){
 	}
 
 }
-
 /*
  * Send a JSON response with memory usage information
  */
-void meminfo(FILE* fd){
+void meminfo(int fd){
 	//open /proc/meminfo
 	FILE * memfile = fopen("/proc/meminfo", "r");
 	if(memfile == NULL){
 		//Return internal server error
 	}
+		char buffer[5000];
+	int buffer_count = 0;
+	
 	//For each line, read name and value
 	char name[128]; //Fixed size, but should be large enough
 	long value;
@@ -56,10 +64,13 @@ void meminfo(FILE* fd){
 		}
 		//Package as JSON
 		if(headed){
-			fprintf(fd, ", ");
+			buffer_count += snprintf((buffer+buffer_count), 5000-buffer_count, ", ");
+			//chain.curren_char = asprintf(&chain.cuurent_char, ", "); 
+			//fprintf(fd, ", ");
 		}
 		else{
-			fprintf(fd, "{");
+			buffer_count += snprintf((buffer+buffer_count), 5000-buffer_count, "{");
+			//fprintf(fd, "{");
 			headed = true;
 		}
 		//Get rid of the colon
@@ -67,14 +78,16 @@ void meminfo(FILE* fd){
 		if(colon != NULL){
 			*colon = '\0';
 		}
-		fprintf(fd, "\"%s\": \"%ld\"", name, value);
+		buffer_count += snprintf((buffer+buffer_count), 5000-buffer_count, "\"%s\": \"%ld\"", name, value);
+		//fprintf(fd, "\"%s\": \"%ld\"", name, value);
 	}
-	fprintf(fd, "}");
+	buffer_count += snprintf((buffer+buffer_count), 5000-buffer_count, "}");
+	//fprintf(fd, "}");
 	//Close file
 	if(fclose(memfile)){
 		// Failed to close a readonly file?!
 		// We can probably ignore this, because there's nothing we could do to
 		// fix it.
 	}
-
+	response(fd, HTTP_OK, buffer, buffer_count);
 }
