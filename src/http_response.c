@@ -1,6 +1,7 @@
 #include <string.h>
 #include "sockets.h"
 #include <stdio.h>
+
 void response(int fd, char *msg, char *content, size_t content_len){
 	write_to_socket(fd, "HTTP/1.1 ", strlen("HTTP/1.1 "));
 	write_to_socket(fd, msg, strlen(msg));

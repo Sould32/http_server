@@ -17,7 +17,8 @@ int get_listen_fd(char * port){
 		return -1;
 	}
 	int sock = -1;
-	for(struct addrinfo * p = res; p != NULL; p = p->ai_next){
+	struct addrinfo * p;
+	for(p = res; p != NULL; p = p->ai_next){
 		if((sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0){
 			continue;
 		}
@@ -32,12 +33,17 @@ int get_listen_fd(char * port){
 			close(sock);
 			continue;
 		}
-		if(! bind(sock, p->ai_addr, p->ai_addrlen)){
+		if(bind(sock, p->ai_addr, p->ai_addrlen) == 0){
 			break;
 		}
 		close(sock);
 	}
 	freeaddrinfo(res);
+	if(!p) return -1;
+	if(listen(sock, SOMAXCONN) < 0){
+		close(sock);
+		return -1;
+	}
 	return sock;
 }
 int read_from_socket(int socketfd, char* buff,  size_t num_byte){
@@ -108,7 +114,6 @@ int write_to_socket(int socketfd, char* buff, size_t num_byte){
 		n_left -= num_written;
 		buff_pos += num_written;
 	}
-	printf("%zu bytes successffuly read.\n", num_byte);
 	return 0 ;
 }
 int socket_read_line(int fd, char* buff, size_t max_length){
@@ -123,7 +128,7 @@ int socket_read_line(int fd, char* buff, size_t max_length){
 			}
 			*buff_pos++ = c;
 		}else if (num_read == 0){
-			if (i == 1){
+			if (i == 0){
 				return EOF; //EOF no data
 			}else{
 				break;
