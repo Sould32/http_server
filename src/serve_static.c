@@ -43,7 +43,7 @@ void serve_static(int fd, char* path){
 	strcpy(fullpath, fpath);
 	strcpy(strchr(fullpath, '\0'), path);
 	if(logging) printf("Serving file: %s\n", fullpath);
-	FILE * file = fopen(path, "r");
+	FILE * file = fopen(fullpath, "r");
 	if(file == NULL){
 		
 		perror("Unable to open file");
@@ -67,5 +67,4 @@ void serve_static(int fd, char* path){
 		}
 		free(buf);
 	}
-	free(fullpath);
 }
