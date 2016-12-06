@@ -67,4 +67,5 @@ void serve_static(int fd, char* path){
 		}
 		free(buf);
 	}
+	free(fullpath);
 }
