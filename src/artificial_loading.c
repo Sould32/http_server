@@ -3,6 +3,7 @@
 #include <sys/mman.h>
 #include <time.h>
 #include "artificial_loading.h"
+#include "http_response.h"
 
 /*
  * TODO: Replace fprintf with methods to write to socket
@@ -31,7 +32,7 @@ static void * runloop_proc(void * data){
 /*
  * Spawn thread that loops for 15 seconds
  */
-void runloop(FILE * fd){
+void runloop(int fd){
 	//Spawn off thread. Make it detached so we don't need to clean up.
 	pthread_t thread;
 	pthread_attr_t thread_attr;
@@ -43,25 +44,25 @@ void runloop(FILE * fd){
 		//saying to wait 15 seconds
 	}
 	pthread_attr_destroy(&thread_attr);
-	fprintf(fd, "Started 15 second spin");
+	response_head(fd, HTTP_OK, "Started 15 second spin");
+	//fprintf(fd, "Started 15 second spin");
 }
 
 static pthread_mutex_t block_lock = PTHREAD_MUTEX_INITIALIZER;
 static int block_count = 0;
 static void* first_block = NULL;
-
+char * cnt = "Mapped and touched 256MB anonymous memory, now have 0 blocks allocated in total.";
 /*
  * Allocate 256 MB block to poke at memory usage
  *
  * Succeeds unless mmap failed.
  * Maximum of six blocks can be allocated.
  */
-void allocanon(FILE * fd){
+void allocanon(int fd){
 	pthread_mutex_lock(&block_lock);
 	if(block_count == 6){
 		pthread_mutex_unlock(&block_lock);
-		fprintf(fd, "Reached maximum of 6 blocks, request ignored");
-		//Still returns OK
+		response_head(fd, HTTP_OK, "Reached maximum of 6 blocks, request ignored");
 		return;
 	}
 	//Allocate 256 MB
@@ -70,14 +71,16 @@ void allocanon(FILE * fd){
 		block_count++;
 		*((void**)block) = first_block;
 		first_block = block;
-		fprintf(fd, "Mapped and touched 256MB anonymous memory, now have %d blocks allocated in total.", block_count);
+		cnt[53] = '0'+ block_count;
+		response_head(fd, HTTP_OK, cnt);	
+		//fprintf(fd, "Mapped and touched 256MB anonymous memory, now have %d blocks allocated in total.", block_count);
 	}
 	else{
 		//Internal server error
 	}
 	pthread_mutex_unlock(&block_lock);
 }
-
+char* cnt1 = "Unmapped 256 MB, 0 blocks left.";
 /*
  * Free previously allocated block of memory
  *
@@ -85,7 +88,7 @@ void allocanon(FILE * fd){
  * This function should always succeed unless something very odd and probably
  * hardware-related happens.
  */
-void freeanon(FILE * fd){
+void freeanon(int fd){
 	pthread_mutex_lock(&block_lock);
 	if(block_count){
 		block_count--;
@@ -95,10 +98,13 @@ void freeanon(FILE * fd){
 			// munmap failed? /Should/ never happen.
 			// Return internal server error
 		}
-		fprintf(fd, "Unmapped 256 MB, %d blocks left.", block_count);
+		cnt1[17]= block_count;
+		response_head(fd, HTTP_OK, cnt1); 
+		//fprintf(fd, "Unmapped 256 MB, %d blocks left.", block_count);
 	}
 	else{
-		fprintf(fd, "No blocks allocated.");
+		response_head(fd, HTTP_OK, "No Blocks allocated.");
+		//fprintf(fd, "No blocks allocated.");
 	}
 	pthread_mutex_unlock(&block_lock);
 }

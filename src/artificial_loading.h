@@ -7,10 +7,10 @@
 
 #include <stdio.h>
 
-void runloop(FILE * fd);
+void runloop(int fd);
 
-void allocanon(FILE * fd);
+void allocanon(int fd);
 
-void freeanon(FILE * fd);
+void freeanon(int fd);
 
 #endif

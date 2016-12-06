@@ -56,4 +56,4 @@
 #define HTTP_VERSION_NOT_SUPPORTED "505 HTTP Version not supported"
 
 void response(int fd, char *msg, char *content, size_t content_len);
-
+void response_head(int fd, char* msg, char* content);

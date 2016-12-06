@@ -14,3 +14,8 @@ void response(int fd, char *msg, char *content, size_t content_len){
 	write_to_socket(fd, content, content_len);
 
 }
+
+void response_head(int fd, char* msg, char* content){
+	 response(fd, msg, content, strlen(content));
+}
+
