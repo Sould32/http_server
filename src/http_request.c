@@ -3,6 +3,9 @@
 #include "sockets.h"
 #include "http_request.h"
 #include "http_response.h"
+#include "system_info.h"
+#include "serve_static.h"
+#include "artificial_loading.h"
 
 #define MAX_LINE_LENGTH 2048
 
@@ -99,7 +102,8 @@ int read_request(int fd){
 		return 1;
 	}
 	//Parse URI
-	printf("%s\n", uri);
+	printf("URI: %s\n", uri);
+	#if 0
 	if(uri[0] != '/'){
 		//Hostname was included
 		uri = strchr(uri, '/');
@@ -108,6 +112,7 @@ int read_request(int fd){
 			return 1;
 		}
 	}
+	#endif
 	//Read header fields
 	char header_line[MAX_LINE_LENGTH];
 	req.content_len = -1;
@@ -116,21 +121,56 @@ int read_request(int fd){
 			return 1;
 		}
 		//Store content-length directly
-		if(strstr(line, "Content-Length: ") == line){
+		if(strstr(header_line, "Content-Length: ") == header_line){
 			if(sscanf(line, "%*s %zd", & req.content_len) < 1){
 				response(fd, HTTP_BAD_REQUEST, bad_request_msg, 
 						strlen(bad_request_msg));
 				free_request(& req);
 				return 1;
 			}
+			printf("Content length: %zd\n", req.content_len);
 		}
 		else{
+			printf("Header field: %s\n", header_line);
 			//Malloc request header
 		}
-	} while(strcmp(line, ""));
-	if(req.method != HEAD && req.content_len == -1){
+	} while(header_line[0] != '\0');
+	printf("Header fields parsed\n");
+	if(req.method != HEAD && req.method != GET && req.content_len == -1){
 		response(fd, HTTP_LENGTH_REQUIRED, no_length_msg, strlen(no_length_msg));
 	}
 	//Pass request to appropriate handling function
-	return 0;
+	if(strstr(uri, "/loadavg") == uri){
+		loadavg(fd);
+		return 0;
+	}
+	else if(strstr(uri, "/meminfo") == uri){
+		//printf("Meminfo not implemented yet\n");
+		//response(fd, HTTP_NOT_FOUND, not_found_msg, strlen(not_found_msg));
+		meminfo(fd);
+		return 0;
+	}
+	else if(strstr(uri, "/files") == uri){
+		uri = uri + 6; //Get rid of the files section
+		serve_static(fd, uri);
+		return 0;
+	}
+	else if(strstr(uri, "/runloop") == uri){
+		runloop(fd);
+		return 0;
+	}
+	else if(strstr(uri, "/allocanon") == uri){
+		allocanon(fd);
+		return 0;
+	}
+	else if(strstr(uri, "/freeanon") == uri){
+		freeanon(fd);
+		return 0;
+	}
+	else{
+		response(fd, HTTP_NOT_FOUND, not_found_msg, strlen(not_found_msg));
+		return 0;
+	}
+	//Should never hit this
+	return 1;
 }

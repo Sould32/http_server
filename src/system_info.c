@@ -22,8 +22,8 @@ void loadavg(int fd){
 	int running, total;
 	int lastPID;
 	if(fscanf(loadfile, "%f %f %f %d/%d %d", &last1, &last5, &last10, &running, &total, &lastPID) == 6){
-		char buffer[200];
-		snprintf( buffer, 100, "{\"total_threads\": \"%d\", \"loadavg\": [\"%f\", \"%f\", \"%f\"], \"running_threads\": \"%d\"}", total, last1, last5, last10, running);
+		char buffer[300];
+		snprintf( buffer, 300, "{\"total_threads\": \"%d\", \"loadavg\": [\"%f\", \"%f\", \"%f\"], \"running_threads\": \"%d\"}", total, last1, last5, last10, running);
 		//TODO adjust the length of the file
 		response_head(fd, HTTP_OK, buffer);
 		//fprintf(fd, HTTP_OK, );

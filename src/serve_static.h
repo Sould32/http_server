@@ -8,4 +8,6 @@
 // exaple string.htm
 // append it to R and and then search the entire directory
 const char * find_file(char* path, char *arg);
+
+void serve_static(int fd, char * path);
 #endif

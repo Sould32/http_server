@@ -74,6 +74,7 @@ int main(int argc, char **argv){
 				//Empty loop
 			}
 			close(connfd);
+			if(logging) printf("Connection closed: %d\n", connfd);
 		}
 		else{
 			perror("Accept");

@@ -85,7 +85,6 @@ int read_from_socket(int socketfd, char* buff,  size_t num_byte){
 	return 0;
 }
 int write_to_socket(int socketfd, char* buff, size_t num_byte){
-	bzero(buff, num_byte);
 	size_t n_left = num_byte;
 	char * buff_pos = buff;
 	ssize_t num_written;
@@ -122,11 +121,12 @@ int socket_read_line(int fd, char* buff, size_t max_length){
 	int i;
 	for (i = 0; (i < max_length); i++){
 		if ((num_read = read(fd, &c, 1)) == 1){
-			if(c == '\n' || c == '\r'){
-				i++;
+			if(c == '\n'){
 				break;
 			}
-			*buff_pos++ = c;
+			if(c != '\r'){
+				*buff_pos++ = c;
+			}
 		}else if (num_read == 0){
 			if (i == 0){
 				return EOF; //EOF no data

@@ -6,10 +6,7 @@
 #include "http_response.h"
 
 /*
- * TODO: Replace fprintf with methods to write to socket
- * TODO: Get message length for inclusion with HTTP header
- * TODO: Write HTTP headers too.
- * TODO: Add limit to number of runloop procedures that can be running
+ * TODO: Replace runloop error 500 with 503 and retry-after header field
  */
 
 /*
@@ -42,16 +39,16 @@ void runloop(int fd){
 		//Unable to create thread
 		//Probably return 503 (Service unavailable) with retry-after header
 		//saying to wait 15 seconds
+		response_head(fd, HTTP_INTERNAL_ERROR, "Unable to spawn thread.");
 	}
 	pthread_attr_destroy(&thread_attr);
 	response_head(fd, HTTP_OK, "Started 15 second spin");
-	//fprintf(fd, "Started 15 second spin");
 }
 
 static pthread_mutex_t block_lock = PTHREAD_MUTEX_INITIALIZER;
 static int block_count = 0;
 static void* first_block = NULL;
-char * cnt = "Mapped and touched 256MB anonymous memory, now have 0 blocks allocated in total.";
+char * cnt = "Mapped and touched 256MB anonymous memory, now have %d blocks allocated in total.";
 /*
  * Allocate 256 MB block to poke at memory usage
  *
@@ -71,16 +68,16 @@ void allocanon(int fd){
 		block_count++;
 		*((void**)block) = first_block;
 		first_block = block;
-		cnt[53] = '0'+ block_count;
-		response_head(fd, HTTP_OK, cnt);	
-		//fprintf(fd, "Mapped and touched 256MB anonymous memory, now have %d blocks allocated in total.", block_count);
+		char buf[100];
+		sprintf(buf, cnt, block_count);
+		response_head(fd, HTTP_OK, buf);
 	}
 	else{
-		//Internal server error
+		response_head(fd, HTTP_INTERNAL_ERROR, "Unable to allocate memory.");
 	}
 	pthread_mutex_unlock(&block_lock);
 }
-char* cnt1 = "Unmapped 256 MB, 0 blocks left.";
+char* cnt1 = "Unmapped 256 MB, %d blocks left.";
 /*
  * Free previously allocated block of memory
  *
@@ -95,16 +92,15 @@ void freeanon(int fd){
 		void* oldblock = first_block;
 		first_block = *((void**) oldblock);
 		if(munmap(oldblock, 256 << 20)){
-			// munmap failed? /Should/ never happen.
-			// Return internal server error
+			// munmap failed? *Should* never happen.
+			response_head(fd, HTTP_INTERNAL_ERROR, "Unable to free memory.");
 		}
-		cnt1[17]= block_count;
-		response_head(fd, HTTP_OK, cnt1); 
-		//fprintf(fd, "Unmapped 256 MB, %d blocks left.", block_count);
+		char buf[100];
+		sprintf(buf, cnt1, block_count);
+		response_head(fd, HTTP_OK, buf); 
 	}
 	else{
 		response_head(fd, HTTP_OK, "No Blocks allocated.");
-		//fprintf(fd, "No blocks allocated.");
 	}
 	pthread_mutex_unlock(&block_lock);
 }
