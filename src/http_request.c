@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
 #include "sockets.h"
 #include "http_request.h"
 #include "http_response.h"
@@ -89,7 +91,7 @@ int read_request(int fd){
 		http_version++;
 	}
 	//Check http version
-	if(strcmp(http_version, "HTTP/1.1")){// May need to accept 1.0 too
+	if(strcmp(http_version, "HTTP/1.1") && strcmp(http_version, "HTTP/1.0")){
 		//Send back http version not supported
 		response(fd, HTTP_VERSION_NOT_SUPPORTED, http_version_msg, strlen(http_version_msg));
 		return 1;
@@ -103,6 +105,25 @@ int read_request(int fd){
 	}
 	//Parse URI
 	printf("URI: %s\n", uri);
+	char * callback_function = NULL;
+	char * params = strchr(uri, '?');
+	if(params){
+		char * callback = strstr(uri, "callback=");
+		if(callback){
+			callback += 9;
+			char * end;
+			if((end = strchr(callback, '&'))){
+				*end = '\0';
+			}
+			bool isvalid = true;
+			for(char * c = callback; *c != '\0'; ++c){
+				isvalid &= isalnum(*c) || (*c == '.') || (*c == '_');
+			}
+			if(isvalid){
+				callback_function = callback;
+			}
+		}
+	}
 	#if 0
 	if(uri[0] != '/'){
 		//Hostname was included
@@ -141,13 +162,13 @@ int read_request(int fd){
 	}
 	//Pass request to appropriate handling function
 	if(strstr(uri, "/loadavg") == uri){
-		loadavg(fd);
+		loadavg(fd, callback_function);
 		return 0;
 	}
 	else if(strstr(uri, "/meminfo") == uri){
 		//printf("Meminfo not implemented yet\n");
 		//response(fd, HTTP_NOT_FOUND, not_found_msg, strlen(not_found_msg));
-		meminfo(fd);
+		meminfo(fd, callback_function);
 		return 0;
 	}
 	else if(strstr(uri, "/files") == uri){

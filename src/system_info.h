@@ -5,8 +5,8 @@
 #define SYSTEM_INFO_H
 #include <stdio.h>
 
-void loadavg(int fd);
+void loadavg(int fd, char * callback);
 
-void meminfo(int fd);
+void meminfo(int fd, char * callback);
 
 #endif
