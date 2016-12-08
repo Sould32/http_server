@@ -94,19 +94,19 @@ int write_to_socket(int socketfd, char* buff, size_t num_byte){
 		if(num_written < 0){
 			switch(errno){
 				case EAGAIN:
-					perror("The O_NONBLOCKFLAG is set for this fd and the process will be delayed.\n");
+					//perror("The O_NONBLOCKFLAG is set for this fd and the process will be delayed.\n");
 					return -1;
 				case EDESTADDRREQ:
-					perror("fd refers to a datagram socket for which a peer address has not been set using connect.\n");
+					//perror("fd refers to a datagram socket for which a peer address has not been set using connect.\n");
 					return -1;
 				case EFAULT:
-					perror("buffer is outside your accessible address space.\n");
+					//perror("buffer is outside your accessible address space.\n");
 					return -1;
 				case EINTR:
 					num_written = 0;
 					break;
 				case EPIPE:
-					perror("The fd is connected to a socket whose reading end is closed.\n");
+					//perror("The fd is connected to a socket whose reading end is closed.\n");
 					return -1;
 			}
 		}

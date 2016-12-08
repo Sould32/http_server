@@ -11,6 +11,8 @@
 
 #define MAX_LINE_LENGTH 2048
 
+extern bool logging;
+
 static enum http_request_method parse_method(char* line){
 	if(strlen(line) < 3){
 		return UNKNOWN;
@@ -66,8 +68,8 @@ int read_request(int fd){
 	if((nread = socket_read_line(fd, line, MAX_LINE_LENGTH)) < 0){
 		return 1;
 	}
-	if(nread == EOF) {printf("EOF encountered!"); return 1;}
-	printf("Header line: %s\n", line);
+	if(nread == EOF) {if(logging) printf("EOF encountered!"); return 1;}
+	if(logging) printf("Header line: %s\n", line);
 	//Split at start of URI
 	char * uri;
 	if((uri = strchr(line, ' ')) == NULL){
@@ -108,7 +110,7 @@ int read_request(int fd){
 		return 1;
 	}
 	//Parse URI
-	printf("URI: %s\n", uri);
+	if(logging) printf("URI: %s\n", uri);
 	char * callback_function = NULL;
 	char * params = strchr(uri, '?');
 	if(params){
@@ -129,48 +131,17 @@ int read_request(int fd){
 			}
 		}
 	}
-	#if 0
-	if(uri[0] != '/'){
-		//Hostname was included
-		uri = strchr(uri, '/');
-		if(uri == NULL){
-			response(fd, HTTP_NOT_FOUND, not_found_msg, strlen(not_found_msg));
-			return 1;
-		}
-	}
-	#endif
 	//Read header fields
 	char header_line[MAX_LINE_LENGTH];
 	req.content_len = -1;
-	#if 0
-	do{
-		if(socket_read_line(fd, header_line, MAX_LINE_LENGTH) < 0){
-			return 1;
-		}
-		//Store content-length directly
-		if(strstr(header_line, "Content-Length: ") == header_line){
-			if(sscanf(line, "%*s %zd", & req.content_len) < 1){
-				response(fd, HTTP_BAD_REQUEST, bad_request_msg, 
-						strlen(bad_request_msg));
-				free_request(& req);
-				return 1;
-			}
-			printf("Content length: %zd\n", req.content_len);
-		}
-		else{
-			printf("Header field: %s\n", header_line);
-			//Malloc request header
-		}
-	} while(header_line[0] != '\0');
-	#endif
 	if(0) free_request(& req);
 	do{
 		if(socket_read_line(fd, header_line, MAX_LINE_LENGTH) < 0){
 			return 1;
 		}
-		printf("Header field: %s\n", header_line);
+		if(logging) printf("Header field: %s\n", header_line);
 	} while(strlen(header_line) != 0);
-	printf("Header fields parsed\n");
+	if(logging) printf("Header fields parsed\n");
 	if(req.method != HEAD && req.method != GET && req.content_len == -1){
 		response(fd, HTTP_LENGTH_REQUIRED, no_length_msg, strlen(no_length_msg));
 	}
@@ -180,8 +151,6 @@ int read_request(int fd){
 		return close;
 	}
 	else if(strstr(uri, "/meminfo") == uri && (uri[8] == '?' || uri[8] == '\0')){
-		//printf("Meminfo not implemented yet\n");
-		//response(fd, HTTP_NOT_FOUND, not_found_msg, strlen(not_found_msg));
 		meminfo(fd, callback_function);
 		return close;
 	}

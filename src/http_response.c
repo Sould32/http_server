@@ -1,9 +1,12 @@
 #include <string.h>
-#include "sockets.h"
+#include <stdbool.h>
 #include <stdio.h>
+#include "sockets.h"
+
+extern bool logging;
 
 void response(int fd, char *msg, char *content, size_t content_len){
-	printf("Sending response\n");
+	if(logging) printf("Sending response\n");
 	write_to_socket(fd, "HTTP/1.1 ", strlen("HTTP/1.1 "));
 	write_to_socket(fd, msg, strlen(msg));
 	write_to_socket(fd, "\r\n", 2);
