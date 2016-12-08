@@ -112,9 +112,10 @@ int read_request(int fd){
 	char * callback_function = NULL;
 	char * params = strchr(uri, '?');
 	if(params){
-		char * callback = strstr(uri, "callback=");
+		char * callback = strstr(uri, "?callback=");
+		if(!callback) callback = strstr(uri, "&callback=");
 		if(callback){
-			callback += 9;
+			callback += 10;
 			char * end;
 			if((end = strchr(callback, '&'))){
 				*end = '\0';
@@ -174,11 +175,11 @@ int read_request(int fd){
 		response(fd, HTTP_LENGTH_REQUIRED, no_length_msg, strlen(no_length_msg));
 	}
 	//Pass request to appropriate handling function
-	if(strstr(uri, "/loadavg") == uri){
+	if(strstr(uri, "/loadavg") == uri && (uri[8] == '?' || uri[8] == '\0')){
 		loadavg(fd, callback_function);
 		return close;
 	}
-	else if(strstr(uri, "/meminfo") == uri){
+	else if(strstr(uri, "/meminfo") == uri && (uri[8] == '?' || uri[8] == '\0')){
 		//printf("Meminfo not implemented yet\n");
 		//response(fd, HTTP_NOT_FOUND, not_found_msg, strlen(not_found_msg));
 		meminfo(fd, callback_function);
@@ -189,15 +190,15 @@ int read_request(int fd){
 		serve_static(fd, uri);
 		return close;
 	}
-	else if(strstr(uri, "/runloop") == uri){
+	else if(strstr(uri, "/runloop") == uri && (uri[8] == '?' || uri[8] == '\0')){
 		runloop(fd);
 		return close;
 	}
-	else if(strstr(uri, "/allocanon") == uri){
+	else if(strstr(uri, "/allocanon") == uri && (uri[10] == '?' || uri[10] == '\0')){
 		allocanon(fd);
 		return close;
 	}
-	else if(strstr(uri, "/freeanon") == uri){
+	else if(strstr(uri, "/freeanon") == uri && (uri[9] == '?' || uri[9] == '\0')){
 		freeanon(fd);
 		return close;
 	}
