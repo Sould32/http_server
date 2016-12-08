@@ -96,6 +96,10 @@ int read_request(int fd){
 		response(fd, HTTP_VERSION_NOT_SUPPORTED, http_version_msg, strlen(http_version_msg));
 		return 1;
 	}
+	bool close = false;
+	if(!strcmp(http_version, "HTTP/1.0")){
+		close = true;
+	}
 	//Check request method
 	req.method = parse_method(line);
 	if(req.method == UNKNOWN){
@@ -137,6 +141,7 @@ int read_request(int fd){
 	//Read header fields
 	char header_line[MAX_LINE_LENGTH];
 	req.content_len = -1;
+	#if 0
 	do{
 		if(socket_read_line(fd, header_line, MAX_LINE_LENGTH) < 0){
 			return 1;
@@ -156,6 +161,14 @@ int read_request(int fd){
 			//Malloc request header
 		}
 	} while(header_line[0] != '\0');
+	#endif
+	if(0) free_request(& req);
+	do{
+		if(socket_read_line(fd, header_line, MAX_LINE_LENGTH) < 0){
+			return 1;
+		}
+		printf("Header field: %s\n", header_line);
+	} while(strlen(header_line) != 0);
 	printf("Header fields parsed\n");
 	if(req.method != HEAD && req.method != GET && req.content_len == -1){
 		response(fd, HTTP_LENGTH_REQUIRED, no_length_msg, strlen(no_length_msg));
@@ -163,30 +176,30 @@ int read_request(int fd){
 	//Pass request to appropriate handling function
 	if(strstr(uri, "/loadavg") == uri){
 		loadavg(fd, callback_function);
-		return 0;
+		return close;
 	}
 	else if(strstr(uri, "/meminfo") == uri){
 		//printf("Meminfo not implemented yet\n");
 		//response(fd, HTTP_NOT_FOUND, not_found_msg, strlen(not_found_msg));
 		meminfo(fd, callback_function);
-		return 0;
+		return close;
 	}
 	else if(strstr(uri, "/files") == uri){
 		uri = uri + 6; //Get rid of the files section
 		serve_static(fd, uri);
-		return 0;
+		return close;
 	}
 	else if(strstr(uri, "/runloop") == uri){
 		runloop(fd);
-		return 0;
+		return close;
 	}
 	else if(strstr(uri, "/allocanon") == uri){
 		allocanon(fd);
-		return 0;
+		return close;
 	}
 	else if(strstr(uri, "/freeanon") == uri){
 		freeanon(fd);
-		return 0;
+		return close;
 	}
 	else{
 		response(fd, HTTP_NOT_FOUND, not_found_msg, strlen(not_found_msg));
