@@ -39,10 +39,10 @@ void runloop(int fd){
 		//Unable to create thread
 		//Probably return 503 (Service unavailable) with retry-after header
 		//saying to wait 15 seconds
-		response_head(fd, HTTP_INTERNAL_ERROR, "Unable to spawn thread.");
+		response_head(fd, HTTP_INTERNAL_ERROR, "Unable to spawn thread");
 	}
 	pthread_attr_destroy(&thread_attr);
-	response_head(fd, HTTP_OK, "Started 15 second spin");
+	response_head(fd, HTTP_OK, "Started 15 second spin.");
 }
 
 static pthread_mutex_t block_lock = PTHREAD_MUTEX_INITIALIZER;

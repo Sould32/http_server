@@ -11,7 +11,8 @@
 #include "artificial_loading.h"
 #include "sockets.h"
 #include "http_request.h"
-
+#include "http_response.h"
+#include <pthread.h>
 static void print_usage(){
 	fprintf(stderr, "Usage: sysstatd -p [PORT NUMBER] -R [STATIC PATH]\n");
 	fprintf(stderr, "    -p    Specify the port to host the server on.\n");
@@ -23,6 +24,28 @@ char * fpath = NULL;
 char * port = NULL;
 bool logging = true;
 
+void * connection_routine(void * fd){
+	int connfd = (intptr_t) fd;
+	//Handle connection
+	if(logging) printf("Accepted connection: %d\n", connfd);
+	while(! read_request(connfd)){
+		//Empty loop
+	}	
+	close(connfd);
+	if(logging) printf("Connection closed: %d\n", connfd);
+	return NULL;
+}
+
+void conncection_thread(int fd){
+	pthread_t thread;
+	pthread_attr_t thread_attr;
+	pthread_attr_init(&thread_attr);
+	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
+	if(pthread_create(&thread, &thread_attr, &connection_routine, (void*)(intptr_t) fd)){
+		response_head(fd, HTTP_SERVICE_UNAVAILABLE, "Unable to spawn thread"); 
+	}
+	pthread_attr_destroy(&thread_attr);
+}
 int main(int argc, char **argv){
 	int opt;
 	while((opt = getopt(argc, argv, "p:R:s")) > 0){
@@ -67,16 +90,10 @@ int main(int argc, char **argv){
 		socklen_t clientaddr_len = sizeof(clientaddr);
 		connfd = accept(listenfd, (struct sockaddr *) &clientaddr, 
 				&clientaddr_len);
-		//Handle connection
 		if(connfd > 0){
-			if(logging) printf("Accepted connection: %d\n", connfd);
-			while(! read_request(connfd)){
-				//Empty loop
-			}
-			close(connfd);
-			if(logging) printf("Connection closed: %d\n", connfd);
-		}
-		else{
+			// spawn of a new thread to handle that connection
+			conncection_thread(connfd);
+		}else{
 			perror("Accept");
 		}
 	}
