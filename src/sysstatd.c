@@ -42,6 +42,7 @@ void conncection_thread(int fd){
 	pthread_attr_init(&thread_attr);
 	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
 	if(pthread_create(&thread, &thread_attr, &connection_routine, (void*)(intptr_t) fd)){
+		fprintf(stderr, "Thread spawn error\n");
 		response_head(fd, HTTP_SERVICE_UNAVAILABLE, "Unable to spawn thread"); 
 	}
 	pthread_attr_destroy(&thread_attr);
@@ -84,7 +85,7 @@ int main(int argc, char **argv){
 		connfd = accept(listenfd, (struct sockaddr *) &clientaddr, 
 				&clientaddr_len);
 		if(connfd > 0){
-			// spawn of a new thread to handle that connection
+			// spawn off a new thread to handle that connection
 			conncection_thread(connfd);
 		}else{
 			perror("Accept");
