@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/sendfile.h>
 #include "http_response.h"
 
 extern char * fpath;
@@ -43,29 +45,17 @@ void serve_static(int fd, char* path){
 	strcpy(fullpath, fpath);
 	strcpy(strchr(fullpath, '\0'), path);
 	if(logging) printf("Serving file: %s\n", fullpath);
-	FILE * file = fopen(fullpath, "r");
-	if(file == NULL){
-		
+	int fileid = open(fullpath, O_RDONLY);
+	if(fileid < 0){
 		perror("Unable to open file");
 		response_head(fd, HTTP_NOT_FOUND, "File not found or inaccessible");
 	}
 	else{
-		fseek(file, 0, SEEK_END);
-		long int size = ftell(file);
-		fseek(file, 0, SEEK_SET);
-		char * buf = malloc(size);
-		bool err = false;
-		if(fread(buf, sizeof(char), size, file) != size){
-			err = true;
-		}
-		fclose(file);
-		if(err){
-			response_head(fd, HTTP_INTERNAL_ERROR, "Error reading file");
-		}
-		else{
-			response(fd, HTTP_OK, buf, size);
-		}
-		free(buf);
+		struct stat stat_buf;
+		fstat(fileid, &stat_buf);
+		send_response(fd, HTTP_OK,stat_buf.st_size);
+		sendfile(fd, fileid, 0, stat_buf.st_size);
+		close(fileid);
 	}
 	free(fullpath);
 }

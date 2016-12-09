@@ -70,13 +70,6 @@ int main(int argc, char **argv){
 		print_usage();
 		return 1;
 	}
-	#if 0
-	if(fpath == NULL){
-		fprintf(stderr, "Static directory not specified\n");
-		print_usage();
-		return 1;
-	}
-	#endif
 	if(logging) printf("Port: %s Directory: %s\n", port, fpath);
 	signal(SIGPIPE, SIG_IGN);
 	int listenfd = get_listen_fd(port);

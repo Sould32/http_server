@@ -57,3 +57,4 @@
 
 void response(int fd, char *msg, char *content, size_t content_len);
 void response_head(int fd, char* msg, char* content);
+void send_response(int fd, char *msg, size_t content_len);
