@@ -59,30 +59,29 @@ int read_from_socket(int socketfd, char* buff,  size_t num_byte){
 					num_read = 0;
 					break;
 				case EAGAIN:
-					perror("The O_NONBLOCKFLAG is set for this fd and the process will be delayed.\n");
-					return -1;
+					return num_byte - n_left;
 				case EINVAL:
-					perror("The fildes reference stream is linked downstream from a multiplexer.\n");
+					//perror("The fildes reference stream is linked downstream from a multiplexer.\n");
 					return -1;
 				case ECONNRESET:
-					perror("A read was attempted on a socket and the connection was forcibly closed by its peer.\n");
+					//perror("A read was attempted on a socket and the connection was forcibly closed by its peer.\n");
 					return -1;
 				case ENOTCONN:
-					perror("A read was attempted on a socket that is not connected.\n");
+					//perror("A read was attempted on a socket that is not connected.\n");
 					return -1;
 				case ETIMEDOUT:
-					perror("A read was attempted on a socket and a tramission timeout occurred.\n");
+					//perror("A read was attempted on a socket and a tramission timeout occurred.\n");
 					return -1;
 			}
 		}else if (num_read == 0){
-			num_read = 0; // EOF
-			break;
+			// EOF
+			return -1;
 		}
 		n_left -= num_read;
 		buff_pos += num_read;
 	}
-	printf("%zu bytes successfully read from the socket\n", num_byte);
-	return 0;
+	//printf("%zu bytes successfully read from the socket\n", num_byte);
+	return num_byte - n_left;
 }
 int write_to_socket(int socketfd, char* buff, size_t num_byte){
 	size_t n_left = num_byte;

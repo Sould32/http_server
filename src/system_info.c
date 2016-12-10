@@ -5,18 +5,13 @@
 #include "http_response.h"
 
 /*
- * TODO: Replace fprintf with methods to write to socket
- * TODO: Get message length for inclusion with HTTP header
- * TODO: Write HTTP headers too.
- */
-
-/*
  * Send a JSON response with load average information
  */
 void loadavg(int fd, char * callback){
 	FILE * loadfile = fopen("/proc/loadavg", "r");
 	if(loadfile == NULL){
 		//return internal server error
+		response_head(fd, HTTP_INTERNAL_ERROR, "Unable to read /proc/loadavg");
 	}
 	float last1, last5, last10;
 	int running, total;
