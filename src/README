@@ -1,0 +1,7 @@
+Group members:
+Souleymane Dia (sould32)
+Timothy Hughes (timh)
+
+This server implements several web services and file serving. Multiple clients
+are supported by using one thread per connection. All I/O operations are 
+blocking, but will only block the thread used by that connection. IPV4 is supported by binding an IPV6 socket and using dual-binding to accept connections from both types of addresses.
