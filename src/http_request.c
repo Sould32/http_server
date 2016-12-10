@@ -42,18 +42,6 @@ static enum http_request_method parse_method(char* line){
 	}
 }
 
-static void free_request(struct http_request * req){
-	struct http_header_field * prev = NULL;
-	for(struct http_header_field * head = req->headers; head != NULL;
-			head = head->next){
-		free(head->name);
-		free(head->value);
-		if(prev != NULL) free(prev);
-		prev = head;
-	}
-	if(prev != NULL) free(prev);
-}
-
 static char * bad_request_msg = "Error 400: Bad request";
 static char * bad_uri_msg = "Error 414: URI too long to read";
 static char * http_version_msg = "Unknown HTTP version; only 1.1 supported";
@@ -62,7 +50,6 @@ static char * no_length_msg = "Length of request body required";
 static char * not_found_msg = "Not found";
 
 int read_request(int fd){
-	struct http_request req;
 	char line[MAX_LINE_LENGTH];
 	int nread = 0;
 	if((nread = socket_read_line(fd, line, MAX_LINE_LENGTH)) < 0){
@@ -103,8 +90,8 @@ int read_request(int fd){
 		close = true;
 	}
 	//Check request method
-	req.method = parse_method(line);
-	if(req.method == UNKNOWN){
+	enum http_request_method method = parse_method(line);
+	if(method == UNKNOWN){
 		//Send back unimplemented
 		response(fd, HTTP_NOT_IMPLEMENTED, bad_request_type, strlen(bad_request_type));
 		return 1;
@@ -133,8 +120,7 @@ int read_request(int fd){
 	}
 	//Read header fields
 	char header_line[MAX_LINE_LENGTH];
-	req.content_len = -1;
-	if(0) free_request(& req);
+	int content_len = -1;
 	do{
 		if(socket_read_line(fd, header_line, MAX_LINE_LENGTH) < 0){
 			return 1;
@@ -142,7 +128,7 @@ int read_request(int fd){
 		if(logging) printf("Header field: %s\n", header_line);
 	} while(strlen(header_line) != 0);
 	if(logging) printf("Header fields parsed\n");
-	if(req.method != HEAD && req.method != GET && req.content_len == -1){
+	if(method != HEAD && method != GET && content_len == -1){
 		response(fd, HTTP_LENGTH_REQUIRED, no_length_msg, strlen(no_length_msg));
 	}
 	//Pass request to appropriate handling function
