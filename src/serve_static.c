@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/sendfile.h>
+#include <errno.h>
 #include "http_response.h"
 
 extern char * fpath;
@@ -54,7 +55,17 @@ void serve_static(int fd, char* path){
 		struct stat stat_buf;
 		fstat(fileid, &stat_buf);
 		send_response(fd, HTTP_OK,stat_buf.st_size);
-		sendfile(fd, fileid, 0, stat_buf.st_size);
+		while(1){
+			int n = sendfile(fd, fileid, 0, stat_buf.st_size);
+			if(n < 0){
+				if(errno != EAGAIN){
+					break;
+				}
+				continue;
+			}
+			stat_buf.st_size -= n;
+			if(stat_buf.st_size == 0) break;
+		}
 		close(fileid);
 	}
 	free(fullpath);
