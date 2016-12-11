@@ -17,7 +17,7 @@
 #include "http_response.h"
 
 #define ACCEPT_THREADS_MAX 3
-#define CONNECTION_THREADS 8
+#define CONNECTION_THREADS 4
 #define MAX_EVENTS 100
 
 static void print_usage(){
@@ -40,7 +40,7 @@ void * connection_handler(void * data){
 			struct conn_state * state = events[i].data.ptr;
 			if((events[i].events & !EPOLLIN) || read_request(state)){
 				epoll_ctl(epollfd, EPOLL_CTL_DEL, state->fd, &events[i]);
-				//if(logging) printf("Connection closed: %d\n", state->fd);
+				if(logging) printf("Connection closed: %d\n", state->fd);
 				close(state->fd);
 				free(state);
 			}
@@ -87,6 +87,7 @@ void * accept_routine(void * fd){
 				state->pos = 0;
 				event.events = EPOLLIN|EPOLLRDHUP|EPOLLHUP|EPOLLERR;
 				event.data.ptr = state;
+				if(logging) printf("Connection open: %d\n", state->fd);
 				if(epoll_ctl(epollfd[j], EPOLL_CTL_ADD, connfd, &event)){
 					close(connfd);
 					perror("epoll_ctl");

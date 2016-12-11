@@ -66,7 +66,7 @@ static char * bad_request_type = "Request type not implemented";
 static char * not_found_msg = "Not found";
 
 int read_request(struct conn_state * state){
-//	if(logging) printf("Processing connection %d\n", state->fd);
+	if(logging) printf("Processing connection %d\n", state->fd);
 	//Read data
 	if(fill_buffer(state)) return 1;
 	char * header_end = strstr(state->buffer, "\r\n\r\n");
@@ -81,7 +81,6 @@ int read_request(struct conn_state * state){
 	char * line = state->buffer;
 	char * line_end = strstr(line, "\r\n");
 	line_end[0] = '\0';
-	line_end[1] = '\0';
 	if(logging) printf("Header line: %s\n", line);
 	//Split at start of URI
 	char * uri;

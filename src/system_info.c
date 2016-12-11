@@ -35,7 +35,6 @@ void loadavg(int fd, char * callback){
 		// We can probably ignore this, because there's nothing we could do to
 		// fix it.
 	}
-
 }
 /*
  * Send a JSON response with memory usage information

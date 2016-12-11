@@ -57,8 +57,10 @@ int read_from_socket(int socketfd, char* buff,  size_t num_byte){
 			switch(errno){
 				case EINTR:
 					num_read = 0;
+					printf("Interrupted: %d\n", socketfd);
 					break;
 				case EAGAIN:
+					printf("Would block: %d\n", socketfd);
 					return num_byte - n_left;
 				case EINVAL:
 					//perror("The fildes reference stream is linked downstream from a multiplexer.\n");
@@ -75,8 +77,10 @@ int read_from_socket(int socketfd, char* buff,  size_t num_byte){
 			}
 		}else if (num_read == 0){
 			// EOF
+			printf("EOF: %d\n", socketfd);
 			return -1;
 		}
+		printf("Read %zd from %d\n", num_read, socketfd);
 		n_left -= num_read;
 		buff_pos += num_read;
 	}
