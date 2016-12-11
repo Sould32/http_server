@@ -78,6 +78,12 @@ void * accept_routine(void * fd){
 			if(-1 == fcntl(connfd, F_SETFL, flags | O_NONBLOCK)){
 				close(connfd);
 				perror("Unable to set nonblocking");
+				continue;
+			}
+			if(setnodelay(connfd)){
+				perror("Unable to set nodelay");
+				close(connfd);
+				continue;
 			}
 			// Add connection to a connection thread's queue
 			struct epoll_event event;

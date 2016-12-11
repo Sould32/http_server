@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <netinet/tcp.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -46,6 +47,12 @@ int get_listen_fd(char * port){
 	}
 	return sock;
 }
+
+int setnodelay(int fd){
+	int on = 1;
+	return setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on));
+}
+
 int read_from_socket(int socketfd, char* buff,  size_t num_byte){
 	bzero(buff, num_byte);
 	size_t n_left = num_byte;
