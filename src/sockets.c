@@ -37,6 +37,7 @@ int get_listen_fd(char * port){
 		if(bind(sock, p->ai_addr, p->ai_addrlen) == 0){
 			break;
 		}
+		perror("Bind");
 		close(sock);
 	}
 	freeaddrinfo(res);
